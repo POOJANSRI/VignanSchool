@@ -1,0 +1,199 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    // Check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Get the caller's role stored in /users/{uid}
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isSuperAdmin()  { return isAuth() && myRole() == 'super_admin'; }
+    function isPrincipal()   { return isAuth() && myRole() == 'principal'; }
+    function isHOD()         { return isAuth() && myRole() == 'hod'; }
+    function isFaculty()     { return isAuth() && myRole() == 'faculty'; }
+    function isManagement()  { return isAuth() && myRole() == 'management'; }
+    function isCoordinator() { return isAuth() && myRole() == 'coordinator'; }
+
+    // Roles that can see parent contact details / recordings
+    function canSeeContacts() {
+      return isSuperAdmin() || isPrincipal() || isCoordinator();
+    }
+
+    // Roles with school-wide read access
+    function isSchoolWide() {
+      return isSuperAdmin() || isPrincipal() || isHOD() || isManagement();
+    }
+
+    // ─── /users ───────────────────────────────────────────────────────────────
+    // Each user document stores: role, name, email, createdAt
+
+    match /users/{uid} {
+      // Users can read their own profile; super_admin can read all
+      allow read: if isAuth() && (request.auth.uid == uid || isSuperAdmin());
+      // Users can create their own profile upon signup
+      allow create: if isAuth() && request.auth.uid == uid;
+      // Only super_admin can update / delete user records
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // ─── /campaigns ───────────────────────────────────────────────────────────
+    // Fields: name, year, audience, parents, completed, responseRate,
+    //         status, start, end, ops{}
+
+    match /campaigns/{campaignId} {
+      allow read:   if isSchoolWide() || isCoordinator();
+      allow create: if isSuperAdmin() || isPrincipal() || isCoordinator();
+      allow update: if isSuperAdmin() || isPrincipal() || isCoordinator();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /students ────────────────────────────────────────────────────────────
+    // Fields: id, name, grade, section, parent, relationship, language,
+    //         faculty, callStatus, feedbackStatus, lastCall
+
+    match /students/{studentId} {
+      // Faculty can only read their own students
+      allow read: if isSchoolWide() || isCoordinator()
+                  || (isFaculty()
+                      && resource.data.faculty == request.auth.token.name);
+      allow create: if isSuperAdmin() || isPrincipal();
+      allow update: if isSuperAdmin() || isPrincipal() || isCoordinator();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /feedback ────────────────────────────────────────────────────────────
+    // Fields: student, grade, section, faculty, subject, campaign, date,
+    //         duration, sentiment, rating, priority, categories, summary,
+    //         positives, issues, suggestedAction, consent, recording, transcript[]
+
+    match /feedback/{feedbackId} {
+      // Faculty see only feedback for their own classes (anonymised — no parent details)
+      allow read: if isSchoolWide() || isCoordinator()
+                  || (isFaculty()
+                      && resource.data.faculty == request.auth.token.name);
+      // Recordings: only roles with canSeeContacts can read the recording field
+      // (Enforce in your app logic — Firestore can't filter individual fields)
+      allow create: if isSuperAdmin() || isCoordinator();
+      allow update: if isSuperAdmin() || isPrincipal() || isCoordinator();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /issues ──────────────────────────────────────────────────────────────
+    // Fields: title, category, mentions, classesAffected, priority, trend,
+    //         assignedTo, status, updated, summary, evidence[], history[], before, after
+
+    match /issues/{issueId} {
+      allow read:   if isSchoolWide() || isCoordinator();
+      allow create: if isSuperAdmin() || isPrincipal() || isCoordinator();
+      // Assigned owner can update their own issue
+      allow update: if isSuperAdmin() || isPrincipal() || isHOD()
+                    || (isAuth() && resource.data.assignedToUid == request.auth.uid);
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /actions ─────────────────────────────────────────────────────────────
+    // Fields: action, issueId, issue, owner, priority, created, target,
+    //         status, outcome, timeline[]
+
+    match /actions/{actionId} {
+      allow read:   if isSchoolWide() || isCoordinator() || isFaculty();
+      allow create: if isSuperAdmin() || isPrincipal() || isHOD() || isCoordinator();
+      // Owner can update their own action
+      allow update: if isSuperAdmin() || isPrincipal() || isHOD()
+                    || (isAuth() && resource.data.ownerUid == request.auth.uid);
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /faculty ─────────────────────────────────────────────────────────────
+    // Fields: name, subject, grades, rating, positive, neutral, negative,
+    //         responses, contacted, keyConcern, openActions, trend[]
+
+    match /faculty/{facultyId} {
+      allow read:   if isSchoolWide()
+                    || (isFaculty() && resource.data.uid == request.auth.uid);
+      allow create: if isSuperAdmin() || isPrincipal();
+      allow update: if isSuperAdmin() || isPrincipal() || isHOD();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /notifications ───────────────────────────────────────────────────────
+    // Fields: recipientUid, role, text, read, createdAt
+
+    match /notifications/{notifId} {
+      // Users read their own notifications; admin reads all
+      allow read:   if isAuth()
+                    && (resource.data.recipientUid == request.auth.uid || isSuperAdmin());
+      allow create: if isSuperAdmin() || isPrincipal() || isCoordinator();
+      // Owner can mark as read
+      allow update: if isAuth() && resource.data.recipientUid == request.auth.uid;
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /escalations ─────────────────────────────────────────────────────────
+    // Fields: issueId, raisedBy, assignedTo, priority, status, createdAt
+
+    match /escalations/{escalationId} {
+      allow read:   if isSuperAdmin() || isPrincipal() || isCoordinator();
+      allow create: if isSuperAdmin() || isPrincipal() || isCoordinator();
+      allow update: if isSuperAdmin() || isPrincipal();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /callbacks ───────────────────────────────────────────────────────────
+    // Fields: studentId, parentName, scheduledAt, status, notes
+
+    match /callbacks/{callbackId} {
+      allow read:   if isSuperAdmin() || isPrincipal() || isCoordinator();
+      allow create: if isCoordinator() || isSuperAdmin();
+      allow update: if isCoordinator() || isSuperAdmin() || isPrincipal();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /callFailures ────────────────────────────────────────────────────────
+    // Fields: studentId, reason, attemptCount, lastAttempt, status
+
+    match /callFailures/{failureId} {
+      allow read:   if isSuperAdmin() || isPrincipal() || isCoordinator();
+      allow create: if isCoordinator() || isSuperAdmin();
+      allow update: if isCoordinator() || isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── /settings ────────────────────────────────────────────────────────────
+    // School-wide config: only super_admin and principal can touch
+
+    match /settings/{settingId} {
+      allow read:   if isAuth();
+      allow write:  if isSuperAdmin() || isPrincipal();
+    }
+
+    // ─── /auditLogs ───────────────────────────────────────────────────────────
+    // Append-only audit trail — only super_admin can read
+
+    match /auditLogs/{logId} {
+      allow read:   if isSuperAdmin();
+      allow create: if isAuth();   // any authenticated user can append a log
+      allow update, delete: if false; // immutable
+    }
+
+    // ─── /metrics ─────────────────────────────────────────────────────────────
+    // Global KPI metrics
+    match /metrics/{metricId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

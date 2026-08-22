@@ -1,0 +1,183 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * VIGNAN PARENT VOICE AI — design system
+ * Navy / royal blue / teal education SaaS language.
+ */
+
+@theme inline {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --shadow-card: 0 1px 2px oklch(0.28 0.06 258 / 0.06), 0 6px 20px oklch(0.28 0.06 258 / 0.06);
+  --shadow-pop: 0 12px 40px oklch(0.28 0.06 258 / 0.14);
+}
+
+:root {
+  --radius: 0.875rem;
+  /* #F6F8FB */
+  --background: oklch(0.976 0.005 250);
+  /* #172033 */
+  --foreground: oklch(0.243 0.031 258);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.243 0.031 258);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.243 0.031 258);
+  /* #123B63 deep navy */
+  --navy: oklch(0.343 0.069 246);
+  --navy-foreground: oklch(0.985 0.005 250);
+  /* #2563EB royal blue */
+  --primary: oklch(0.546 0.215 263);
+  --primary-foreground: oklch(0.99 0.005 250);
+  --secondary: oklch(0.955 0.011 250);
+  --secondary-foreground: oklch(0.343 0.069 246);
+  --muted: oklch(0.963 0.008 250);
+  /* #667085 */
+  --muted-foreground: oklch(0.554 0.026 258);
+  /* #0F9D8A teal */
+  --accent: oklch(0.605 0.104 180);
+  --accent-foreground: oklch(0.99 0.005 250);
+  /* #DC2626 */
+  --destructive: oklch(0.577 0.229 27);
+  --destructive-foreground: oklch(0.99 0.005 250);
+  /* #16A34A */
+  --success: oklch(0.596 0.163 149);
+  --success-foreground: oklch(0.99 0.005 250);
+  /* #F59E0B */
+  --warning: oklch(0.769 0.163 70);
+  --warning-foreground: oklch(0.26 0.04 60);
+  --info: oklch(0.546 0.215 263);
+  --info-foreground: oklch(0.99 0.005 250);
+  /* #E5E7EB */
+  --border: oklch(0.917 0.005 258);
+  --input: oklch(0.917 0.005 258);
+  --ring: oklch(0.546 0.215 263);
+  --chart-1: oklch(0.546 0.215 263);
+  --chart-2: oklch(0.605 0.104 180);
+  --chart-3: oklch(0.596 0.163 149);
+  --chart-4: oklch(0.769 0.163 70);
+  --chart-5: oklch(0.577 0.229 27);
+  --sidebar: oklch(0.29 0.06 246);
+  --sidebar-foreground: oklch(0.9 0.015 250);
+  --sidebar-primary: oklch(0.605 0.104 180);
+  --sidebar-primary-foreground: oklch(0.99 0.005 250);
+  --sidebar-accent: oklch(0.36 0.07 246);
+  --sidebar-accent-foreground: oklch(0.99 0.005 250);
+  --sidebar-border: oklch(0.38 0.06 246);
+  --sidebar-ring: oklch(0.605 0.104 180);
+}
+
+.dark {
+  --background: oklch(0.19 0.03 258);
+  --foreground: oklch(0.96 0.006 250);
+  --card: oklch(0.24 0.035 255);
+  --card-foreground: oklch(0.96 0.006 250);
+  --popover: oklch(0.24 0.035 255);
+  --popover-foreground: oklch(0.96 0.006 250);
+  --navy: oklch(0.3 0.06 246);
+  --navy-foreground: oklch(0.98 0.005 250);
+  --primary: oklch(0.62 0.19 263);
+  --primary-foreground: oklch(0.15 0.03 258);
+  --secondary: oklch(0.3 0.04 255);
+  --secondary-foreground: oklch(0.96 0.006 250);
+  --muted: oklch(0.3 0.04 255);
+  --muted-foreground: oklch(0.72 0.02 258);
+  --accent: oklch(0.65 0.1 180);
+  --accent-foreground: oklch(0.15 0.03 258);
+  --destructive: oklch(0.63 0.2 27);
+  --destructive-foreground: oklch(0.98 0.005 250);
+  --success: oklch(0.65 0.15 149);
+  --success-foreground: oklch(0.15 0.03 258);
+  --warning: oklch(0.8 0.15 70);
+  --warning-foreground: oklch(0.2 0.03 60);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.62 0.19 263);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+  }
+}
+
+@utility surface {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+@utility gradient-navy {
+  background-image: linear-gradient(135deg, oklch(0.343 0.069 246), oklch(0.42 0.11 255));
+}
+
+@utility gradient-soft {
+  background-image: linear-gradient(
+    135deg,
+    oklch(0.546 0.215 263 / 0.08),
+    oklch(0.605 0.104 180 / 0.08)
+  );
+}
